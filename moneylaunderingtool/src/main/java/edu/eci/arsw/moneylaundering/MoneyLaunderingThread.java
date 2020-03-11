@@ -10,9 +10,8 @@ public class MoneyLaunderingThread extends Thread {
     private int inicio;
     private int fin;
 
-    public MoneyLaunderingThread(int a,int b,List<Transaction> transactions){
-        //this.transactionAnalyzer = tansactionAnalyzer;
-        transactionAnalyzer = new TransactionAnalyzer();
+    public MoneyLaunderingThread(int a,int b,List<Transaction> transactions,TransactionAnalyzer transactionAnalyzer){
+        this.transactionAnalyzer = transactionAnalyzer;
         this.transactions = transactions;
         inicio = a;
         fin = b;
@@ -20,10 +19,24 @@ public class MoneyLaunderingThread extends Thread {
 
     @Override
     public void run(){
-        System.out.println("analizando transacciones");
         for(int i=inicio;i<fin;i++) {
+            if(MoneyLaundering.getPause()){
+                synchronized (MoneyLaundering.monitor){
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             transactionAnalyzer.addTransaction(transactions.get(i));
         }
+
+    }
+
+    public synchronized void reanudar(){
+        notifyAll();
+        this.start();
     }
 
 }
