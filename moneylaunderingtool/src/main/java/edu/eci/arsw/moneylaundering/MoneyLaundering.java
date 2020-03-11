@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,27 +19,44 @@ public class MoneyLaundering
     private TransactionReader transactionReader;
     private int amountOfFilesTotal;
     private AtomicInteger amountOfFilesProcessed;
+    //private ArrayList<Thread> threads;
+    private ArrayList<MoneyLaunderingThread> threads;
 
-    public MoneyLaundering()
-    {
+    public MoneyLaundering(){
         transactionAnalyzer = new TransactionAnalyzer();
         transactionReader = new TransactionReader();
         amountOfFilesProcessed = new AtomicInteger();
     }
 
-    public void processTransactionData()
-    {
+    public void processTransactionData(int numberOfThreads) {
         amountOfFilesProcessed.set(0);
         List<File> transactionFiles = getTransactionFileList();
         amountOfFilesTotal = transactionFiles.size();
-        for(File transactionFile : transactionFiles)
-        {            
+        for(File transactionFile : transactionFiles){
             List<Transaction> transactions = transactionReader.readTransactionsFromFile(transactionFile);
-            for(Transaction transaction : transactions)
-            {
+            System.out.println(transactions.size());
+            for(int i=0;i<numberOfThreads;i++){
+                int inicio = i*(transactions.size()/numberOfThreads);
+                int fin = (i+1)*(transactions.size()/numberOfThreads);
+                System.out.println(inicio+" "+fin);
+                //threads.add(new Thread(() -> analizarTransacciones(inicio, fin,transactions)));
+                threads.add(new MoneyLaunderingThread(inicio, fin,transactions));
+                threads.get(i).start();
+            }
+
+            /*
+            for(Transaction transaction : transactions) {
                 transactionAnalyzer.addTransaction(transaction);
             }
+            */
+
             amountOfFilesProcessed.incrementAndGet();
+        }
+    }
+
+    public void analizarTransacciones(int inicio,int fin,List<Transaction> transactions){
+        for(int i=inicio;i<fin;i++) {
+            transactionAnalyzer.addTransaction(transactions.get(i));
         }
     }
 
@@ -61,7 +79,8 @@ public class MoneyLaundering
     public static void main(String[] args)
     {
         MoneyLaundering moneyLaundering = new MoneyLaundering();
-        Thread processingThread = new Thread(() -> moneyLaundering.processTransactionData());
+        int numberOfThreads = 5;
+        Thread processingThread = new Thread(() -> moneyLaundering.processTransactionData(numberOfThreads));
         processingThread.start();
         while(true)
         {
