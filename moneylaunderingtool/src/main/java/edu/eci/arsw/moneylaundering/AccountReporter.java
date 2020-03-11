@@ -1,5 +1,6 @@
 package edu.eci.arsw.moneylaundering;
 
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -25,6 +26,8 @@ public class AccountReporter {
                 HttpClient httpClient = HttpClientBuilder.create().build();
                 HttpPost request = new HttpPost("http://localhost:8080/fraud-bank-accounts");
                 request.setEntity(entity);
+
+                System.out.println(request+" "+httpClient);
 
                 HttpResponse response;
                 response = httpClient.execute(request);

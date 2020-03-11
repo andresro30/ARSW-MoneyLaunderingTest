@@ -21,6 +21,7 @@ public class MoneyLaundering
     private AtomicInteger amountOfFilesProcessed;
     //private ArrayList<Thread> threads;
     private ArrayList<MoneyLaunderingThread> threads;
+    //private ArrayList<Thread> threads;
 
     public MoneyLaundering(){
         transactionAnalyzer = new TransactionAnalyzer();
@@ -28,35 +29,42 @@ public class MoneyLaundering
         amountOfFilesProcessed = new AtomicInteger();
     }
 
-    public void processTransactionData(int numberOfThreads) {
+    public void processTransactionData(int numberOfThreads){
         amountOfFilesProcessed.set(0);
         List<File> transactionFiles = getTransactionFileList();
         amountOfFilesTotal = transactionFiles.size();
+
         for(File transactionFile : transactionFiles){
+
             List<Transaction> transactions = transactionReader.readTransactionsFromFile(transactionFile);
-            System.out.println(transactions.size());
+            System.out.println("Nuevo archvio de tamaño: "+transactions.size());
+
+            threads = new ArrayList<>();
+            System.out.println("Archivos procesados "+amountOfFilesProcessed+"...");
+
             for(int i=0;i<numberOfThreads;i++){
                 int inicio = i*(transactions.size()/numberOfThreads);
                 int fin = (i+1)*(transactions.size()/numberOfThreads);
                 System.out.println(inicio+" "+fin);
-                //threads.add(new Thread(() -> analizarTransacciones(inicio, fin,transactions)));
-                threads.add(new MoneyLaunderingThread(inicio, fin,transactions));
-                threads.get(i).start();
+                MoneyLaunderingThread hilo = new MoneyLaunderingThread(inicio,fin,transactions);
+                hilo.start();
+                threads.add(hilo);
             }
 
-            /*
-            for(Transaction transaction : transactions) {
-                transactionAnalyzer.addTransaction(transaction);
+            for(MoneyLaunderingThread thread: threads){
+                try {
+                    thread.join();
+                    System.out.println("terminó");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            */
 
+            System.out.println("Cantidad de threads: "+threads.size());
+            threads.clear();
+            System.out.println(threads.size());
             amountOfFilesProcessed.incrementAndGet();
-        }
-    }
-
-    public void analizarTransacciones(int inicio,int fin,List<Transaction> transactions){
-        for(int i=inicio;i<fin;i++) {
-            transactionAnalyzer.addTransaction(transactions.get(i));
+            System.out.println("ya sumo");
         }
     }
 
