@@ -20,13 +20,14 @@ public class MoneyLaunderingThread extends Thread {
     @Override
     public void run(){
         for(int i=inicio;i<fin;i++) {
-            if(MoneyLaundering.getPause()){
+
                 synchronized (MoneyLaundering.monitor){
-                    try {
-                        wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    if(MoneyLaundering.getPause()){
+                        try {
+                            wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                 }
             }
             transactionAnalyzer.addTransaction(transactions.get(i));
