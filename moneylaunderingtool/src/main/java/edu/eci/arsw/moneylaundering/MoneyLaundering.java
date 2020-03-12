@@ -19,7 +19,7 @@ public class MoneyLaundering {
     private static int amountOfFilesTotal;
     private static AtomicInteger amountOfFilesProcessed;
     private static ArrayList<MoneyLaunderingThread> threads;
-    private static boolean pause;
+    public static boolean pause;
     public static Object monitor;
 
     public MoneyLaundering() {
@@ -55,7 +55,7 @@ public class MoneyLaundering {
                 threads.add(hilo);
             }
 
-            /*
+
             for(MoneyLaunderingThread thread: threads){
                 try {
                     thread.join();
@@ -63,8 +63,6 @@ public class MoneyLaundering {
                     e.printStackTrace();
                 }
             }
-
-             */
 
             System.out.println("Cantidad de threads: " + threads.size());
             threads.clear();
@@ -102,35 +100,29 @@ public class MoneyLaundering {
         }
     }
 
-    public static boolean isPaused() {
-        return pause;
-    }
-
-
     public static void main(String[] args) {
         MoneyLaundering moneyLaundering = new MoneyLaundering();
         int numberOfThreads = 5;
         Thread processingThread = new Thread(() -> moneyLaundering.processTransactionData(numberOfThreads));
         processingThread.start();
-        //System.out.println(amountOfFilesProcessed.get() + " " + amountOfFilesTotal + " while");
-        while (true) {
+        while (amountOfFilesProcessed.get()<=amountOfFilesTotal) {
             Scanner scanner = new Scanner(System.in);
             String line = scanner.nextLine();
             if (line.contains("exit")) {
                 break;
             }
-
             if (line.isEmpty()) {
-                setPause();
                 if (pause) {
                     System.out.println("corriendo");
+                    pause = false;
                     synchronized (monitor) {
                         monitor.notifyAll();
                     }
                 } else {
+                    pause = true;
                     System.out.println("pausado");
                 }
-                System.out.println(pause);
+                //System.out.println(pause);
             }
 
             String message = "Processed %d out of %d files.\nFound %d suspect accounts:\n%s";
@@ -139,6 +131,7 @@ public class MoneyLaundering {
             message = String.format(message, moneyLaundering.amountOfFilesProcessed.get(), moneyLaundering.amountOfFilesTotal, offendingAccounts.size(), suspectAccounts);
             System.out.println(message);
         }
+        System.out.println("Salí del while");
 
     }
 

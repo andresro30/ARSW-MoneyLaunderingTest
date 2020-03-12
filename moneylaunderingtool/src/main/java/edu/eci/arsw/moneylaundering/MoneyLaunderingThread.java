@@ -10,7 +10,7 @@ public class MoneyLaunderingThread extends Thread {
     private int inicio;
     private int fin;
 
-    public MoneyLaunderingThread(int a,int b,List<Transaction> transactions,TransactionAnalyzer transactionAnalyzer){
+    public MoneyLaunderingThread(int a, int b, List<Transaction> transactions, TransactionAnalyzer transactionAnalyzer) {
         this.transactionAnalyzer = transactionAnalyzer;
         this.transactions = transactions;
         inicio = a;
@@ -18,16 +18,15 @@ public class MoneyLaunderingThread extends Thread {
     }
 
     @Override
-    public void run(){
-        for(int i=inicio;i<fin;i++) {
-
-                synchronized (MoneyLaundering.monitor){
-                    if(MoneyLaundering.getPause()){
-                        try {
-                            wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+    public void run() {
+        for (int i = inicio; i < fin; i++) {
+            synchronized (MoneyLaundering.monitor) {
+                if (MoneyLaundering.pause) {
+                    try {
+                        MoneyLaundering.monitor.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             transactionAnalyzer.addTransaction(transactions.get(i));
@@ -35,9 +34,10 @@ public class MoneyLaunderingThread extends Thread {
 
     }
 
+    /**
     public synchronized void reanudar(){
         notifyAll();
         this.start();
     }
-
+    */
 }
